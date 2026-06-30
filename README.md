@@ -23,7 +23,7 @@
 - **8 progressive levels, 62 lessons** — from the script (vowels, consonants, the *matra* vowel-sign system, conjuncts) through vocabulary, grammar, conversation, and reading & writing. Aimed at a solid **A2** foundation.
 - **7 exercise types**, mixed throughout: multiple choice, match script-to-sound, type the Bengali word, audio recognition, tap-to-build sentences, **trace-the-letter** (canvas), and **speaking** practice.
 - **Gamified**: XP, a day-streak flame, a hearts/lives system, a unique **badge per level**, a node-based **winding path map**, confetti and synthesized **sound effects** (correct / wrong / lesson-complete), plus a mute toggle.
-- **Bengal Feed** 🧵 — a read-only, threads-style feed of facts about Bengal’s history and modern life (the Language Movement, Tagore, the boson, Kolkata’s metro, Durga Puja, Dhaka muslin…), **reshuffled daily** so there’s something new each visit.
+- **Bengal Feed** 🧵 — a read-only feed with two sections: a curated set of **Bengal facts** (Tagore, the boson, Kolkata’s metro, Durga Puja, Dhaka muslin…) that rotates daily, plus a **live “On this day in history”** section fetched each day from **Wikipedia’s REST API** (with thumbnails and links). Falls back to the curated facts when offline.
 - **Downloadable certificate** — a shareable PNG with your name, the date, and a Bengali calligraphy flourish, unlocked after all 8 levels.
 - **“Did You Know?”** culture cards woven into the path between levels.
 - **Resume where you left off**, per-level and overall progress, all in memory.

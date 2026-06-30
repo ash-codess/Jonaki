@@ -1,7 +1,7 @@
-import { useMemo, useState } from 'react'
-import { THREADS, FEED_FILTERS } from '../data/feed.js'
+import { useEffect, useMemo, useState } from 'react'
+import { THREADS } from '../data/feed.js'
 
-// Tiny seeded PRNG so the daily order is stable within a day but changes each day.
+// Seeded PRNG so the curated "From Bengal" picks rotate once per day.
 function mulberry32(a) {
   return function () {
     a |= 0
@@ -11,7 +11,6 @@ function mulberry32(a) {
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296
   }
 }
-
 function shuffleSeeded(arr, seed) {
   const rand = mulberry32(seed)
   const a = arr.slice()
@@ -21,8 +20,10 @@ function shuffleSeeded(arr, seed) {
   }
   return a
 }
+const pad = (n) => String(n).padStart(2, '0')
 
-function Thread({ thread }) {
+// A curated, hand-written Bengal fact (read-only thread).
+function CuratedThread({ thread }) {
   const multi = thread.posts.length > 1
   return (
     <article className="thread">
@@ -34,7 +35,6 @@ function Thread({ thread }) {
         </div>
         <span className={`t-cat cat-${thread.category}`}>{thread.category}</span>
       </header>
-
       <div className={`thread-body ${multi ? 'threaded' : ''}`}>
         {thread.posts.map((p, i) => (
           <div className="t-post" key={i}>
@@ -47,15 +47,46 @@ function Thread({ thread }) {
   )
 }
 
-export function Feed() {
-  const [filter, setFilter] = useState('all')
+// A live "On this day in history" item fetched from Wikipedia.
+function LiveCard({ item }) {
+  const page = item.pages && item.pages[0]
+  const thumb = page && page.thumbnail && page.thumbnail.source
+  const url =
+    page && page.content_urls && (page.content_urls.desktop || page.content_urls.mobile)
+  const href = url && url.page
+  return (
+    <article className="thread">
+      <header className="thread-head">
+        <div className="t-avatar av-indigo">📅</div>
+        <div className="t-id">
+          <span className="t-name">On This Day</span>
+          <span className="t-handle">via Wikipedia</span>
+        </div>
+        <span className="t-cat cat-history">{item.year}</span>
+      </header>
+      <div className="thread-body">
+        <div className="t-post">
+          <p>{item.text}</p>
+        </div>
+        {thumb && <img className="t-thumb" src={thumb} alt="" loading="lazy" />}
+        {href && (
+          <a className="t-link" href={href} target="_blank" rel="noreferrer">
+            Read on Wikipedia ↗
+          </a>
+        )}
+      </div>
+    </article>
+  )
+}
 
-  // Reshuffle once per day (days since the Unix epoch as the seed).
-  const { ordered, dateLabel } = useMemo(() => {
+export function Feed() {
+  const { dateLabel, mm, dd, bengalPicks } = useMemo(() => {
     const now = new Date()
     const daySeed = Math.floor(now.getTime() / 86_400_000)
     return {
-      ordered: shuffleSeeded(THREADS, daySeed),
+      mm: pad(now.getMonth() + 1),
+      dd: pad(now.getDate()),
+      bengalPicks: shuffleSeeded(THREADS, daySeed).slice(0, 4),
       dateLabel: now.toLocaleDateString(undefined, {
         weekday: 'long',
         day: 'numeric',
@@ -65,33 +96,62 @@ export function Feed() {
     }
   }, [])
 
-  const shown = filter === 'all' ? ordered : ordered.filter((t) => t.category === filter)
+  const [live, setLive] = useState({ loading: true, items: [], error: false })
+
+  useEffect(() => {
+    let active = true
+    const url = `https://en.wikipedia.org/api/rest_v1/feed/onthisday/selected/${mm}/${dd}`
+    fetch(url)
+      .then((r) => {
+        if (!r.ok) throw new Error('bad status')
+        return r.json()
+      })
+      .then((data) => {
+        if (!active) return
+        const items = (data.selected || []).filter((x) => x && x.text).slice(0, 8)
+        setLive({ loading: false, items, error: items.length === 0 })
+      })
+      .catch(() => active && setLive({ loading: false, items: [], error: true }))
+    return () => {
+      active = false
+    }
+  }, [mm, dd])
 
   return (
     <div>
       <div className="hero">
         <h1>Bengal Feed</h1>
-        <p>A reading feed on the history &amp; modern life of Bengal.</p>
+        <p>Curated Bengal facts, plus a live “on this day” from history.</p>
       </div>
 
-      <div className="feed-date">🔄 Refreshed daily · {dateLabel}</div>
+      <div className="feed-date">🗓️ {dateLabel}</div>
 
-      <div className="feed-filters">
-        {FEED_FILTERS.map((f) => (
-          <button
-            key={f.id}
-            className={`fchip ${filter === f.id ? 'on' : ''}`}
-            onClick={() => setFilter(f.id)}
-          >
-            {f.label}
-          </button>
-        ))}
-      </div>
-
+      <h2 className="section">From Bengal</h2>
       <div className="feed">
-        {shown.map((t) => (
-          <Thread key={t.id} thread={t} />
+        {bengalPicks.map((t) => (
+          <CuratedThread key={t.id} thread={t} />
         ))}
+      </div>
+
+      <h2 className="section">On this day in history</h2>
+      <p className="feed-note">🔄 Fetched live each day · powered by Wikipedia</p>
+      <div className="feed">
+        {live.loading && (
+          <>
+            <div className="thread skeleton" />
+            <div className="thread skeleton" />
+            <div className="thread skeleton" />
+          </>
+        )}
+        {!live.loading && live.error && (
+          <p className="feed-note">
+            Couldn’t load today’s live history (you may be offline). The curated Bengal
+            facts above are always available.
+          </p>
+        )}
+        {!live.loading &&
+          !live.error &&
+          live.items.map((item, i) => <LiveCard key={i} item={item} />)}
       </div>
     </div>
   )
