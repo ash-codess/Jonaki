@@ -6,7 +6,7 @@
 
 *“Jonaki” means **firefly** — a little light to guide you through the script.*
 
-🔗 **Live demo:** `https://<your-username>.github.io/jonaki/`
+🔗 **Live demo:** https://ash-codess.github.io/Jonaki/
 
 </div>
 
@@ -23,7 +23,7 @@
 - **8 progressive levels, 62 lessons** — from the script (vowels, consonants, the *matra* vowel-sign system, conjuncts) through vocabulary, grammar, conversation, and reading & writing. Aimed at a solid **A2** foundation.
 - **7 exercise types**, mixed throughout: multiple choice, match script-to-sound, type the Bengali word, audio recognition, tap-to-build sentences, **trace-the-letter** (canvas), and **speaking** practice.
 - **Gamified**: XP, a day-streak flame, a hearts/lives system, a unique **badge per level**, a node-based **winding path map**, confetti and synthesized **sound effects** (correct / wrong / lesson-complete), plus a mute toggle.
-- **Bengal Feed** 🧵 — a threads-style feed of facts about Bengal’s history and modern life (the Language Movement, Tagore, the boson, Kolkata’s metro, Durga Puja, Dhaka muslin…).
+- **Bengal Feed** 🧵 — a read-only, threads-style feed of facts about Bengal’s history and modern life (the Language Movement, Tagore, the boson, Kolkata’s metro, Durga Puja, Dhaka muslin…), **reshuffled daily** so there’s something new each visit.
 - **Downloadable certificate** — a shareable PNG with your name, the date, and a Bengali calligraphy flourish, unlocked after all 8 levels.
 - **“Did You Know?”** culture cards woven into the path between levels.
 - **Resume where you left off**, per-level and overall progress, all in memory.
@@ -67,22 +67,16 @@ To publish for the first time, see **[Publishing](#-publishing)** below. After t
 
 ## 📦 Publishing
 
-> Requires a GitHub account. GitHub Pages is free for **public** repositories.
-
-**With the GitHub CLI** (`gh`):
+> GitHub Pages is free for **public** repositories.
 
 ```bash
-gh repo create jonaki --public --source=. --remote=origin --push
-```
-
-**Without `gh`** — create an empty repo named `jonaki` on github.com, then:
-
-```bash
-git remote add origin https://github.com/<your-username>/jonaki.git
+git remote add origin https://github.com/ash-codess/Jonaki.git
 git push -u origin main
 ```
 
-Then open the repo’s **Actions** tab to watch the deploy, and find the live URL under **Settings → Pages**.
+Pushing to `main` triggers the **Deploy to GitHub Pages** workflow, which builds the app
+and publishes it. Watch progress in the repo’s **Actions** tab; the live URL appears under
+**Settings → Pages**.
 
 ## 🔊 A note on audio
 

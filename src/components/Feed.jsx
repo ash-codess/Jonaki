@@ -1,13 +1,28 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { THREADS, FEED_FILTERS } from '../data/feed.js'
 
-function fmt(n) {
-  return n >= 1000 ? `${(n / 1000).toFixed(1).replace(/\.0$/, '')}k` : `${n}`
+// Tiny seeded PRNG so the daily order is stable within a day but changes each day.
+function mulberry32(a) {
+  return function () {
+    a |= 0
+    a = (a + 0x6d2b79f5) | 0
+    let t = Math.imul(a ^ (a >>> 15), 1 | a)
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296
+  }
+}
+
+function shuffleSeeded(arr, seed) {
+  const rand = mulberry32(seed)
+  const a = arr.slice()
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(rand() * (i + 1))
+    ;[a[i], a[j]] = [a[j], a[i]]
+  }
+  return a
 }
 
 function Thread({ thread }) {
-  const [liked, setLiked] = useState(false)
-  const likeCount = thread.likes + (liked ? 1 : 0)
   const multi = thread.posts.length > 1
   return (
     <article className="thread">
@@ -15,7 +30,7 @@ function Thread({ thread }) {
         <div className={`t-avatar av-${thread.author.color}`}>{thread.author.emoji}</div>
         <div className="t-id">
           <span className="t-name">{thread.author.name}</span>
-          <span className="t-handle">@{thread.author.handle} · {thread.time}</span>
+          <span className="t-handle">@{thread.author.handle}</span>
         </div>
         <span className={`t-cat cat-${thread.category}`}>{thread.category}</span>
       </header>
@@ -28,32 +43,38 @@ function Thread({ thread }) {
           </div>
         ))}
       </div>
-
-      <footer className="thread-actions">
-        <span className="t-action" title="Replies">💬 {fmt(thread.replies)}</span>
-        <span className="t-action" title="Reposts">🔁 {fmt(thread.reposts)}</span>
-        <button
-          className={`t-action like ${liked ? 'on' : ''}`}
-          onClick={() => setLiked((v) => !v)}
-          title="Like"
-        >
-          {liked ? '❤️' : '🤍'} {fmt(likeCount)}
-        </button>
-        <span className="t-action" title="Share">🔗</span>
-      </footer>
     </article>
   )
 }
 
 export function Feed() {
   const [filter, setFilter] = useState('all')
-  const shown = filter === 'all' ? THREADS : THREADS.filter((t) => t.category === filter)
+
+  // Reshuffle once per day (days since the Unix epoch as the seed).
+  const { ordered, dateLabel } = useMemo(() => {
+    const now = new Date()
+    const daySeed = Math.floor(now.getTime() / 86_400_000)
+    return {
+      ordered: shuffleSeeded(THREADS, daySeed),
+      dateLabel: now.toLocaleDateString(undefined, {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      }),
+    }
+  }, [])
+
+  const shown = filter === 'all' ? ordered : ordered.filter((t) => t.category === filter)
+
   return (
     <div>
       <div className="hero">
         <h1>Bengal Feed</h1>
-        <p>Threads on the history &amp; modern life of Bengal — scroll, learn, tap ❤️.</p>
+        <p>A reading feed on the history &amp; modern life of Bengal.</p>
       </div>
+
+      <div className="feed-date">🔄 Refreshed daily · {dateLabel}</div>
 
       <div className="feed-filters">
         {FEED_FILTERS.map((f) => (
