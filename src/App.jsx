@@ -6,6 +6,7 @@ import LessonPlayer from './components/LessonPlayer.jsx'
 import FactCard from './components/FactCard.jsx'
 import { BadgeWall, Certificate } from './components/Screens.jsx'
 import { Feed } from './components/Feed.jsx'
+import { setMuted, playCorrect, unlockAudio } from './game/sfx.js'
 
 function TopBar() {
   const { state, dispatch, MAX_HEARTS } = useGame()
@@ -20,7 +21,16 @@ function TopBar() {
       <button
         className="stat sound"
         title={state.muted ? 'Sound off' : 'Sound on'}
-        onClick={() => dispatch({ type: 'TOGGLE_SOUND' })}
+        onClick={() => {
+          const wasMuted = state.muted
+          dispatch({ type: 'TOGGLE_SOUND' })
+          if (wasMuted) {
+            // turning sound ON — unlock + play a confirmation chime right away
+            unlockAudio()
+            setMuted(false)
+            playCorrect()
+          }
+        }}
       >
         <span className="ic">{state.muted ? '🔇' : '🔊'}</span>
       </button>

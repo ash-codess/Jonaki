@@ -27,6 +27,20 @@ export function unlockAudio() {
   ac()
 }
 
+// Safety net: browsers keep the audio context suspended until the user interacts.
+// Resume (or create) it on the very first interaction anywhere in the app.
+if (typeof window !== 'undefined') {
+  const kick = () => {
+    ac()
+    window.removeEventListener('pointerdown', kick)
+    window.removeEventListener('keydown', kick)
+    window.removeEventListener('touchstart', kick)
+  }
+  window.addEventListener('pointerdown', kick)
+  window.addEventListener('keydown', kick)
+  window.addEventListener('touchstart', kick)
+}
+
 function tone(c, freq, start, dur, { type = 'sine', gain = 0.16, slideTo = null } = {}) {
   const o = c.createOscillator()
   const g = c.createGain()
@@ -48,8 +62,8 @@ export function playCorrect() {
   const c = ac()
   if (!c) return
   const t = c.currentTime
-  tone(c, 659.25, t, 0.12, { type: 'triangle', gain: 0.16 }) // E5
-  tone(c, 987.77, t + 0.09, 0.18, { type: 'triangle', gain: 0.16 }) // B5
+  tone(c, 659.25, t, 0.12, { type: 'triangle', gain: 0.24 }) // E5
+  tone(c, 987.77, t + 0.09, 0.2, { type: 'triangle', gain: 0.24 }) // B5
 }
 
 // Soft, gentle "not quite" blip — low and short, never harsh.
@@ -58,7 +72,7 @@ export function playWrong() {
   const c = ac()
   if (!c) return
   const t = c.currentTime
-  tone(c, 233.08, t, 0.22, { type: 'sine', gain: 0.14, slideTo: 155.56 }) // Bb3 → Eb3
+  tone(c, 233.08, t, 0.24, { type: 'sine', gain: 0.22, slideTo: 155.56 }) // Bb3 → Eb3
 }
 
 // Little four-note fanfare for finishing a lesson.
